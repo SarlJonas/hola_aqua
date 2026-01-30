@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>HOLOAQUA - Piscine Holographique</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --cyan: #00BFFF;
+            --aqua: #00FFFF;
+            --navy: #001F3F;
+            --white: #FFFFFF;
+            --deep-blue: #000B1A;
+            --glow-cyan: 0 0 20px rgba(0, 191, 255, 0.5), 0 0 40px rgba(0, 191, 255, 0.3);
+        }
+        
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            max-height: 932px;
+            background: linear-gradient(180deg, #000B1A 0%, #001F3F 50%, #003366 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Particules d'eau flottantes */
+        .water-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: radial-gradient(circle, var(--aqua) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float-up 8s infinite ease-in-out;
+            opacity: 0.6;
+        }
+        
+        @keyframes float-up {
+            0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+        }
+        
+        /* Lignes holographiques */
+        .holo-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            overflow: hidden;
+        }
+        
+        .holo-line {
+            position: absolute;
+            width: 200%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+            animation: scan-line 4s infinite linear;
+            opacity: 0.3;
+        }
+        
+        @keyframes scan-line {
+            0% { transform: translateX(-50%) translateY(0); }
+            100% { transform: translateX(-50%) translateY(100vh); }
+        }
+        
+        /* Header */
+        .header {
+            position: relative;
+            z-index: 10;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-svg {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .app-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--cyan), var(--aqua));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+        
+        .menu-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 191, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-btn:hover {
+            background: rgba(0, 191, 255, 0.2);
+            box-shadow: var(--glow-cyan);
+        }
+        
+        .menu-line {
+            width: 20px;
+            height: 2px;
+            background: var(--cyan);
+            border-radius: 2px;
+        }
+        
+        /* Écran de démarrage */
+        .splash-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #000B1A 0%, #001F3F 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+        
+        .splash-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 30px;
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 191, 255, 0.5)); transform: scale(1); }
+            50% { filter: drop-shadow(0 0 40px rgba(0, 255, 255, 0.8)); transform: scale(1.05); }
+        }
+        
+        .splash-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--white), var(--cyan), var(--aqua), var(--white));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            animation: text-shimmer 3s infinite linear;
+            background-size: 200% auto;
+        }
+        
+        @keyframes text-shimmer {
+            to { background-position: 200% center; }
+        }
+        
+        .splash-subtitle {
+            font-size: 1rem;
+            color: var(--cyan);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+        
+        .loading-bar {
+            width: 200px;
+            height: 3px;
+            background: rgba(0, 191, 255, 0.2);
+            border-radius: 3px;
+            margin-top: 40px;
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--cyan), var(--aqua));
+            border-radius: 3px;
+            animation: load 2.5s ease-out forwards;
+        }
+        
+        @keyframes load {
+            to { width: 100%; }
+        }
+        
+        /* Contenu principal */
+        .main-content {
+            position: relative;
+            z-index: 10;
+            padding: 0 20px;
+            height: calc(100vh - 180px);
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Scanner AR */
+        .ar-scanner {
+            position: relative;
+            width: 100%;
+            height: 280px;
+            background: linear-gradient(180deg, rgba(0, 31, 63, 0.8), rgba(0, 11, 26, 0.9));
+            border-radius: 24px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .scanner-corners {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            pointer-events: none;
+        }
+        
+        .corner {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-color: var(--cyan);
+            border-style: solid;
+            border-width: 0;
+        }
+        
+        .corner.tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-radius: 8px 0 0 0; }
+        .corner.tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-radius: 0 8px 0 0; }
+        .corner.bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 8px; }
+        .corner.br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 8px 0; }
+        
+        .scan-line-anim {
+            position: absolute;
+            left: 30px;
+            right: 30px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--aqua), transparent);
+            box-shadow: 0 0 20px var(--aqua);
+            animation: scan 2s infinite ease-in-out;
+        }
+        
+        @keyframes scan {
+            0%, 100% { top: 30px; }
+            50% { top: calc(100% - 30px); }
+        }
+        
+        .hologram-preview {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+        }
+        
+        .hologram-creature {
+            font-size: 90px;
+            animation: float-creature 3s infinite ease-in-out;
+            filter: drop-shadow(0 0 30px var(--cyan));
+            transform-style: preserve-3d;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .hologram-creature:hover {
+            transform: scale(1.1);
+        }
+        
+        @keyframes float-creature {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-15px) rotateY(10deg); }
+        }
+        
+        .scanner-text {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            color: var(--cyan);
+            text-align: center;
+        }
+        
+        /* Section titre */
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: var(--white);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, var(--cyan), var(--aqua));
+            border-radius: 2px;
+        }
+        
+        /* Galerie */
+        .gallery-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+        }
+        
+        .gallery-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .gallery-item {
+            flex-shrink: 0;
+            width: 120px;
+            height: 150px;
+            background: linear-gradient(180deg, rgba(0, 191, 255, 0.1), rgba(0, 31, 63, 0.8));
+            border-radius: 18px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gallery-item:hover, .gallery-item.active {
+            border-color: var(--cyan);
+            box-shadow: 0 0 25px rgba(0, 191, 255, 0.3);
+            transform: translateY(-5px);
+        }
+        
+        .gallery-item.active {
+            background: linear-gradient(180deg, rgba(0, 191, 255, 0.2), rgba(0, 31, 63, 0.9));
+        }
+        
+        .gallery-icon {
+            font-size: 45px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 10px var(--cyan));
+        }
+        
+        .gallery-name {
+            font-size: 0.8rem;
+            color: var(--white);
+            font-weight: 500;
+        }
+        
+        .gallery-category {
+            font-size: 0.65rem;
+            color: var(--cyan);
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+        
+        /* Contrôles */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, rgba(0, 191, 255, 0.15), rgba(0, 31, 63, 0.8));
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 18px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .control-btn:hover {
+            background: linear-gradient(135deg, rgba(0, 191, 255, 0.25), rgba(0, 31, 63, 0.9));
+            box-shadow: var(--glow-cyan);
+            transform: scale(1.02);
+        }
+        
+        .control-icon {
+            font-size: 26px;
+        }
+        
+        .control-label {
+            font-size: 0.8rem;
+            color: var(--white);
+            font-weight: 500;
+        }
+        
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(0, 31, 63, 0.5);
+            border-radius: 12px;
+            margin-bottom: 100px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            color: var(--cyan);
+        }
+        
+        /* Mode AR actif */
+        .ar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(0, 31, 63, 0.3) 0%, rgba(0, 11, 26, 0.95) 100%);
+            z-index: 200;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .ar-overlay.active {
+            display: flex;
+        }
+        
+        .close-ar-btn {
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(0, 31, 63, 0.8);
+            border: 2px solid var(--cyan);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--white);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .close-ar-btn:hover {
+            background: var(--cyan);
+            color: var(--navy);
+        }
+        
+        .ar-creature-display {
+            font-size: 180px;
+            animation: float-big 4s infinite ease-in-out;
+            filter: drop-shadow(0 0 60px var(--cyan));
+        }
+        
+        @keyframes float-big {
+            0%, 100% { transform: translateY(0) scale(1) rotateY(0deg); }
+            25% { transform: translateY(-20px) scale(1.02) rotateY(5deg); }
+            50% { transform: translateY(-30px) scale(1.05) rotateY(0deg); }
+            75% { transform: translateY(-20px) scale(1.02) rotateY(-5deg); }
+        }
+        
+        .ar-info-panel {
+            position: absolute;
+            bottom: 80px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 31, 63, 0.9);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .ar-creature-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            color: var(--white);
+            margin-bottom: 8px;
+        }
+        
+        .ar-creature-desc {
+            font-size: 0.9rem;
+            color: var(--cyan);
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+        
+        .ar-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .ar-control-btn {
+            flex: 1;
+            padding: 12px;
+            background: rgba(0, 191, 255, 0.2);
+            border: 1px solid var(--cyan);
+            border-radius: 12px;
+            color: var(--white);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .ar-control-btn:hover {
+            background: var(--cyan);
+            color: var(--navy);
+        }
+        
+        /* Navigation du bas */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(180deg, transparent, rgba(0, 11, 26, 0.98));
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 15px;
+            z-index: 20;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.5;
+            padding: 8px;
+        }
+        
+        .nav-item.active {
+            opacity: 1;
+        }
+        
+        .nav-item:hover {
+            opacity: 1;
+            transform: translateY(-3px);
+        }
+        
+        .nav-icon {
+            font-size: 22px;
+        }
+        
+        .nav-label {
+            font-size: 0.65rem;
+            color: var(--cyan);
+            font-weight: 500;
+        }
+        
+        .ar-main-btn {
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, var(--cyan), var(--aqua));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -25px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+        
+        .ar-main-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.7);
+        }
+        
+        .ar-main-icon {
+            font-size: 28px;
+        }
+        
+        /* Effet d'eau */
+        .water-effect {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+        }
+        
+        .wave {
+            position: absolute;
+            bottom: 60px;
+            left: -50%;
+            width: 200%;
+            height: 80px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='rgba(0, 191, 255, 0.08)'/%3E%3C/svg%3E") repeat-x;
+            animation: wave 10s infinite linear;
+            opacity: 0.6;
+        }
+        
+        .wave:nth-child(2) {
+            bottom: 70px;
+            animation-duration: 8s;
+            opacity: 0.4;
+        }
+        
+        @keyframes wave {
+            from { transform: translateX(0); }
+            to { transform: translateX(50%); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 430px) {
+            .app-container {
+                max-height: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Particules d'eau -->
+        <div class="water-particles" id="particles"></div>
+        
+        <!-- Lignes holographiques -->
+        <div class="holo-lines">
+            <div class="holo-line" style="animation-delay: 0s;"></div>
+            <div class="holo-line" style="animation-delay: 1.3s;"></div>
+            <div class="holo-line" style="animation-delay: 2.6s;"></div>
+        </div>
+        
+        <!-- Effet vagues -->
+        <div class="water-effect">
+            <div class="wave"></div>
+            <div class="wave"></div>
+        </div>
+        
+        <!-- Écran de démarrage -->
+        <div class="splash-screen" id="splashScreen">
+            <svg class="splash-logo" viewBox="0 0 100 100" fill="none">
+                <circle cx="50" cy="50" r="45" stroke="url(#gradSplash)" stroke-width="2" fill="none"/>
+                <path d="M30 50 Q50 20 70 50 Q50 80 30 50" fill="url(#gradSplash)" opacity="0.3"/>
+                <path d="M25 45 Q50 15 75 45" stroke="url(#gradSplash)" stroke-width="3" fill="none"/>
+                <path d="M25 55 Q50 85 75 55" stroke="url(#gradSplash)" stroke-width="3" fill="none"/>
+                <circle cx="50" cy="50" r="8" fill="url(#gradSplash)"/>
+                <defs>
+                    <linearGradient id="gradSplash" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00BFFF"/>
+                        <stop offset="100%" stop-color="#00FFFF"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <h1 class="splash-title">HOLOAQUA</h1>
+            <p class="splash-subtitle">Piscine Holographique</p>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-container">
+                <svg class="logo-svg" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="45" stroke="url(#gradHeader)" stroke-width="2" fill="none"/>
+                    <path d="M30 50 Q50 25 70 50 Q50 75 30 50" fill="url(#gradHeader)" opacity="0.5"/>
+                    <defs>
+                        <linearGradient id="gradHeader" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#00BFFF"/>
+                            <stop offset="100%" stop-color="#00FFFF"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span class="app-title">HOLOAQUA</span>
+            </div>
+            <button class="menu-btn">
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+                <div class="menu-line"></div>
+            </button>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="main-content">
+            <!-- Scanner AR -->
+            <div class="ar-scanner" onclick="openAR()">
+                <div class="scanner-corners">
+                    <div class="corner tl"></div>
+                    <div class="corner tr"></div>
+                    <div class="corner bl"></div>
+                    <div class="corner br"></div>
+                </div>
+                <div class="scan-line-anim"></div>
+                <div class="hologram-preview">
+                    <div class="hologram-creature" id="previewCreature">🐬</div>
+                </div>
+                <p class="scanner-text">Appuyez pour lancer l'expérience AR</p>
+            </div>
+            
+            <!-- Galerie -->
+            <h2 class="section-title">Animations Holographiques</h2>
+            <div class="gallery-scroll" id="gallery"></div>
+            
+            <!-- Contrôles -->
+            <div class="controls">
+                <button class="control-btn" onclick="openAR()">
+                    <span class="control-icon">📷</span>
+                    <span class="control-label">Lancer AR</span>
+                </button>
+                <button class="control-btn">
+                    <span class="control-icon">🎨</span>
+                    <span class="control-label">Personnaliser</span>
+                </button>
+                <button class="control-btn">
+                    <span class="control-icon">📤</span>
+                    <span class="control-label">Partager</span>
+                </button>
+                <button class="control-btn">
+                    <span class="control-icon">⚙️</span>
+                    <span class="control-label">Paramètres</span>
+                </button>
+            </div>
+            
+            <!-- Status -->
+            <div class="status-bar">
+                <div class="status-item">
+                    <span>🎬</span>
+                    <span>50+ animations</span>
+                </div>
+                <div class="status-item">
+                    <span>⚡</span>
+                    <span>60 FPS</span>
+                </div>
+                <div class="status-item">
+                    <span>🔋</span>
+                    <span>Mode éco</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation bas -->
+        <div class="bottom-nav">
+            <div class="nav-item active" data-nav="home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Accueil</span>
+            </div>
+            <div class="nav-item" data-nav="gallery">
+                <span class="nav-icon">🎭</span>
+                <span class="nav-label">Galerie</span>
+            </div>
+            <button class="ar-main-btn" onclick="openAR()">
+                <span class="ar-main-icon">📱</span>
+            </button>
+            <div class="nav-item" data-nav="social">
+                <span class="nav-icon">📤</span>
+                <span class="nav-label">Social</span>
+            </div>
+            <div class="nav-item" data-nav="profile">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Profil</span>
+            </div>
+        </div>
+        
+        <!-- Overlay AR -->
+        <div class="ar-overlay" id="arOverlay">
+            <button class="close-ar-btn" onclick="closeAR()">✕</button>
+            <div class="ar-creature-display" id="arCreature">🐬</div>
+            <div class="ar-info-panel">
+                <h3 class="ar-creature-name" id="arName">Dauphin</h3>
+                <p class="ar-creature-desc" id="arDesc">Dauphin gracieux nageant au-dessus de votre piscine avec des effets holographiques réalistes.</p>
+                <div class="ar-controls">
+                    <button class="ar-control-btn">
+                        <span>📸</span> Capturer
+                    </button>
+                    <button class="ar-control-btn">
+                        <span>🎥</span> Enregistrer
+                    </button>
+                    <button class="ar-control-btn">
+                        <span>📤</span> Partager
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Données des créatures
+        const creatures = [
+            { id: 1, name: 'Dauphin', icon: '🐬', category: 'Océan', desc: 'Dauphin gracieux nageant au-dessus de votre piscine avec des effets holographiques réalistes.' },
+            { id: 2, name: 'Requin', icon: '🦈', category: 'Océan', desc: 'Requin majestueux en 3D haute définition pour une expérience immersive.' },
+            { id: 3, name: 'Méduse', icon: '🪼', category: 'Océan', desc: 'Méduse lumineuse avec effets bioluminescents spectaculaires.' },
+            { id: 4, name: 'Baleine', icon: '🐋', category: 'Océan', desc: 'Baleine à bosse majestueuse en taille impressionnante.' },
+            { id: 5, name: 'Tortue', icon: '🐢', category: 'Nature', desc: 'Tortue de mer paisible glissant gracieusement.' },
+            { id: 6, name: 'Galaxie', icon: '🌌', category: 'Espace', desc: 'Nébuleuse stellaire immersive avec étoiles scintillantes.' },
+            { id: 7, name: 'Dragon', icon: '🐉', category: 'Fantasy', desc: 'Dragon aquatique mythique crachant des flammes bleues.' },
+            { id: 8, name: 'Sirène', icon: '🧜‍♀️', category: 'Fantasy', desc: 'Sirène enchantée dansant dans les reflets de l\'eau.' },
+            { id: 9, name: 'Poulpe', icon: '🐙', category: 'Océan', desc: 'Poulpe géant aux tentacules hypnotiques.' },
+            { id: 10, name: 'Étoile', icon: '⭐', category: 'Espace', desc: 'Constellation brillante illuminant votre piscine.' }
+        ];
+
+        let selectedCreature = creatures[0];
+
+        // Générer les particules
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 25; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.animationDelay = `${Math.random() * 8}s`;
+                particle.style.width = `${3 + Math.random() * 4}px`;
+                particle.style.height = particle.style.width;
+                container.appendChild(particle);
+            }
+        }
+
+        // Générer la galerie
+        function createGallery() {
+            const gallery = document.getElementById('gallery');
+            creatures.forEach((creature, index) => {
+                const item = document.createElement('div');
+                item.className = `gallery-item ${index === 0 ? 'active' : ''}`;
+                item.innerHTML = `
+                    <span class="gallery-icon">${creature.icon}</span>
+                    <span class="gallery-name">${creature.name}</span>
+                    <span class="gallery-category">${creature.category}</span>
+                `;
+                item.onclick = () => selectCreature(creature, item);
+                gallery.appendChild(item);
+            });
+        }
+
+        // Sélectionner une créature
+        function selectCreature(creature, element) {
+            selectedCreature = creature;
+            
+            // Mettre à jour l'affichage
+            document.getElementById('previewCreature').textContent = creature.icon;
+            
+            // Mettre à jour la classe active
+            document.querySelectorAll('.gallery-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // Ouvrir le mode AR
+        function openAR() {
+            const overlay = document.getElementById('arOverlay');
+            document.getElementById('arCreature').textContent = selectedCreature.icon;
+            document.getElementById('arName').textContent = selectedCreature.name;
+            document.getElementById('arDesc').textContent = selectedCreature.desc;
+            overlay.classList.add('active');
+        }
+
+        // Fermer le mode AR
+        function closeAR() {
+            document.getElementById('arOverlay').classList.remove('active');
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // Masquer le splash screen
+        setTimeout(() => {
+            document.getElementById('splashScreen').classList.add('hidden');
+        }, 3000);
+
+        // Initialisation
+        createParticles();
+        createGallery();
+    </script>
+</body>
+</html>
